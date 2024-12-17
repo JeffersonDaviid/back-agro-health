@@ -1,0 +1,26 @@
+services:
+  backend-ah:
+    container_name: backend-ah
+    restart: unless-stopped
+    env_file:
+      - .env
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - ${PORT}:${PORT}
+    volumes:
+      - ./src:/app/src
+      - venv-dependencies:/app/.venv
+    networks:
+      - my-network
+    # command: [ "/app/.venv/bin/uvicorn", "src.main:app", "--reload", "--host", "0.0.0.0", "--port", "${PORT}" ]
+
+volumes:
+  database-ah-data-dev:
+  venv-dependencies:
+
+
+networks:
+  my-network:
+    driver: bridge

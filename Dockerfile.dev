@@ -1,0 +1,24 @@
+# Usar una imagen base ligera
+FROM python:3.12-slim
+
+# Establecer el directorio de trabajo
+WORKDIR /app
+
+# Copiar solo el archivo de dependencias primero para aprovechar el cache
+COPY requirements.txt .
+
+# Instalar las dependencias en un solo paso
+RUN pip install --no-cache-dir --upgrade pip \
+    && pip install --no-cache-dir -r requirements.txt
+
+# Copiar el código fuente al contenedor
+COPY . /app
+
+# Establecer las variables de entorno para el entorno virtual (esto ya no es necesario si no usamos venv)
+ENV PYTHONPATH="/app/src:$PYTHONPATH"
+
+# Exponer el puerto para que el contenedor sea accesible en producción
+EXPOSE 8000
+
+# Ejecutar Uvicorn para poner en producción la aplicación FastAPI
+CMD ["uvicorn", "src.main:app", "--reload", "--host", "0.0.0.0", "--port", "8000"]
