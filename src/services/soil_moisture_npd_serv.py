@@ -43,9 +43,10 @@ def rellenar_con_coordenadas_cercanas(df_predecir, df_datos_llenos, required_col
     """
     Rellena los datos faltantes en df_predecir usando los datos más cercanos de df_datos_llenos.
     """
-    # Excluir las columnas de fecha (year, month, day) del cálculo del promedio
+    # Excluir las columnas de fecha (year, month, day) y coordenadas del cálculo del promedio
     date_columns = ["year", "month", "day"]
-    numeric_columns = [col for col in required_columns if col not in date_columns]
+    exclude_columns = ["Latitude", "Longitude"] + date_columns
+    numeric_columns = [col for col in required_columns if col not in exclude_columns]
 
     for idx, row in df_predecir.iterrows():
         lat = row["Latitude"]
@@ -63,21 +64,17 @@ def rellenar_con_coordenadas_cercanas(df_predecir, df_datos_llenos, required_col
         else:
             # Si no está, buscar las coordenadas más cercanas
             puntos_cercanos = obtener_coordenadas_cercanas(lat, lon, df_datos_llenos)
-            # Solo promedia las columnas numéricas, no las de fecha
-            datos_cercanos = puntos_cercanos[
-                numeric_columns
-            ].mean()  # Promediar los datos de las coordenadas más cercanas
+            # Solo promedia las columnas numéricas
+            datos_cercanos = puntos_cercanos[numeric_columns].mean()
 
-        # Rellenar el df_predecir con los valores obtenidos, sin modificar las columnas de fecha
-        for col in required_columns:
-            if col in date_columns:
-                # Si la columna es de fecha, no se promedia, se asigna el valor original
-                df_predecir.loc[idx, col] = row[col]
-            else:
-                # Para las demás columnas, asignar el valor promedio
-                df_predecir.loc[idx, col] = (
-                    datos_cercanos[col] if col in datos_cercanos else row[col]
-                )
+        # Rellenar el df_predecir con los valores obtenidos, sin modificar las columnas protegidas
+        for col in numeric_columns:
+            df_predecir.loc[idx, col] = (
+                datos_cercanos[col] if col in datos_cercanos else row[col]
+            )
+        # Mantener las columnas de fecha y coordenadas intactas
+        for col in date_columns:
+            df_predecir.loc[idx, col] = row[col]
 
     return df_predecir
 
